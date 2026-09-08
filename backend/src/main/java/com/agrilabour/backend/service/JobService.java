@@ -121,6 +121,7 @@ public class JobService {
             String location,
             String workType,
             JobStatus status,
+            Long skillId,
             BigDecimal minWage,
             BigDecimal maxWage,
             String language
@@ -128,7 +129,7 @@ public class JobService {
         // Default to OPEN status if not specified for general searching
         JobStatus targetStatus = (status != null) ? status : JobStatus.OPEN;
 
-        return jobRepository.filterJobs(location, workType, targetStatus, minWage, maxWage).stream()
+        return jobRepository.filterJobs(location, workType, targetStatus, skillId, minWage, maxWage).stream()
                 .map(job -> mapToJobResponse(job, language))
                 .collect(Collectors.toList());
     }

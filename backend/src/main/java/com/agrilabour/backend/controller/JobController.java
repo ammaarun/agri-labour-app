@@ -75,10 +75,11 @@ public class JobController {
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String workType,
             @RequestParam(required = false) JobStatus status,
+            @RequestParam(required = false) Long skillId,
             @RequestParam(required = false) BigDecimal minWage,
             @RequestParam(required = false) BigDecimal maxWage,
             @RequestHeader(value = "Accept-Language", defaultValue = "en") String language
     ) {
-        return ResponseEntity.ok(jobService.filterJobs(location, workType, status, minWage, maxWage, language));
+        return ResponseEntity.ok(jobService.filterJobs(location, workType, status, skillId, minWage, maxWage, language));
     }
 }

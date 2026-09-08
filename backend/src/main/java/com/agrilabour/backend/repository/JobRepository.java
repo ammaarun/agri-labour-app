@@ -21,6 +21,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
            "(:location IS NULL OR LOWER(j.farmLocation) LIKE LOWER(CONCAT('%', :location, '%'))) AND " +
            "(:workType IS NULL OR LOWER(j.workType) LIKE LOWER(CONCAT('%', :workType, '%'))) AND " +
            "(:status IS NULL OR j.status = :status) AND " +
+           "(:skillId IS NULL OR s.id = :skillId) AND " +
            "(:minWage IS NULL OR j.wageAmount >= :minWage) AND " +
            "(:maxWage IS NULL OR j.wageAmount <= :maxWage) " +
            "ORDER BY j.createdAt DESC")
@@ -28,6 +29,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
             @Param("location") String location,
             @Param("workType") String workType,
             @Param("status") JobStatus status,
+            @Param("skillId") Long skillId,
             @Param("minWage") BigDecimal minWage,
             @Param("maxWage") BigDecimal maxWage
     );
