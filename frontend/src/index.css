@@ -1,5 +1,4 @@
-@import "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css";
-
+/* Fallback & Custom Styling Rules */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -8,4 +7,61 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Fallback button styles to ensure buttons are ALWAYS brightly colored */
+.bg-emerald-600 {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+
+.bg-emerald-600:hover, .hover\:bg-emerald-700:hover {
+  background-color: #047857 !important;
+}
+
+.bg-emerald-700 {
+  background-color: #047857 !important;
+  color: #ffffff !important;
+}
+
+.bg-amber-400 {
+  background-color: #fbbf24 !important;
+  color: #0f172a !important;
+}
+
+.bg-amber-400:hover, .hover\:bg-amber-500:hover {
+  background-color: #f59e0b !important;
+}
+
+.bg-amber-600 {
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+}
+
+.bg-amber-600:hover, .hover\:bg-amber-700:hover {
+  background-color: #b45309 !important;
+}
+
+.bg-slate-900 {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+.bg-slate-900:hover, .hover\:bg-slate-800:hover {
+  background-color: #1e293b !important;
+}
+
+.bg-rose-600 {
+  background-color: #e11d48 !important;
+  color: #ffffff !important;
+}
+
+.bg-rose-600:hover, .hover\:bg-rose-700:hover {
+  background-color: #be123c !important;
+}
+
+/* Ensure button text is high-contrast white when requested */
+.text-white {
+  color: #ffffff !important;
 }

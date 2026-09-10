@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { PlusCircle, Users, CheckCircle, XCircle, Clock, MapPin, Calendar, DollarSign, AlertCircle, RefreshCw, Star, ClipboardCheck, FileSpreadsheet } from 'lucide-react';
+import { PlusCircle, Users, CheckCircle, XCircle, Clock, MapPin, Calendar, DollarSign, AlertCircle, RefreshCw, Star, ClipboardCheck, FileSpreadsheet, X, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const FarmerDashboard = () => {
-  const { user } = useAuth();
+  const { user, logoutUser } = useAuth();
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
 
   const [jobs, setJobs] = useState([]);
   const [skillsList, setSkillsList] = useState([]);
@@ -200,22 +202,43 @@ const FarmerDashboard = () => {
     });
   };
 
+  const handleLogoutAndSwitch = () => {
+    logoutUser();
+    navigate('/login');
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-slate-200 mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900">{t('farmerDashboard')}</h1>
+          <div className="flex items-center space-x-3">
+            <h1 className="text-3xl font-extrabold text-slate-900">{t('farmerDashboard')}</h1>
+            <span className="bg-amber-100 text-amber-900 border border-amber-300 text-xs px-2.5 py-0.5 rounded-full font-bold">
+              👨‍🌾 Logged in as Farmer
+            </span>
+          </div>
           <p className="text-slate-600 mt-1">Manage farm jobs, review applicants, track attendance, and rate workers.</p>
         </div>
-        <button
-          onClick={() => setShowPostModal(true)}
-          className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-bold shadow-md transition-colors"
-        >
-          <PlusCircle className="h-5 w-5" />
-          <span>{t('postJob')}</span>
-        </button>
+
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleLogoutAndSwitch}
+            className="flex items-center space-x-1 bg-slate-200 hover:bg-slate-300 text-slate-700 px-3.5 py-2 rounded-lg font-bold text-xs transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Switch Role / Logout</span>
+          </button>
+          
+          <button
+            onClick={() => setShowPostModal(true)}
+            className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-bold shadow-md transition-colors"
+          >
+            <PlusCircle className="h-5 w-5" />
+            <span>{t('postJob')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Jobs List */}
@@ -227,12 +250,13 @@ const FarmerDashboard = () => {
             <RefreshCw className="h-8 w-8 text-emerald-600 animate-spin" />
           </div>
         ) : jobs.length === 0 ? (
-          <div className="bg-white rounded-xl p-8 text-center border border-slate-200">
+          <div className="bg-white rounded-xl p-8 text-center border border-slate-200 shadow-sm">
             <p className="text-slate-500">You haven't posted any jobs yet.</p>
             <button
               onClick={() => setShowPostModal(true)}
-              className="mt-4 inline-flex items-center space-x-2 text-emerald-600 font-bold hover:underline"
+              className="mt-4 inline-flex items-center space-x-2 text-white bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 rounded-lg font-bold shadow"
             >
+              <PlusCircle className="h-5 w-5" />
               <span>{t('postJob')}</span>
             </button>
           </div>
@@ -272,7 +296,7 @@ const FarmerDashboard = () => {
                   {/* Skills Badges */}
                   <div className="flex flex-wrap gap-1.5 mb-4">
                     {job.requiredSkills.map((skill) => (
-                      <span key={skill.id} className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs">
+                      <span key={skill.id} className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-semibold">
                         {skill.name}
                       </span>
                     ))}
@@ -282,7 +306,7 @@ const FarmerDashboard = () => {
                 <div className="pt-4 border-t border-slate-100 grid grid-cols-3 gap-2">
                   <button
                     onClick={() => openApplicantsModal(job)}
-                    className="flex items-center justify-center space-x-1 bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg text-xs font-medium"
+                    className="flex items-center justify-center space-x-1 bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-lg text-xs font-bold"
                   >
                     <Users className="h-3.5 w-3.5" />
                     <span>{t('viewApplicants')}</span>
@@ -291,12 +315,11 @@ const FarmerDashboard = () => {
                   <button
                     onClick={async () => {
                       setSelectedJobForAttendance(job);
-                      // Load accepted workers for dropdown
                       const res = await api.get(`/applications/farmer/${user.userId}/job/${job.id}`);
                       const acceptedList = res.data.filter(a => a.status === 'ACCEPTED');
                       setApplicants(acceptedList);
                     }}
-                    className="flex items-center justify-center space-x-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-xs font-medium"
+                    className="flex items-center justify-center space-x-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-xs font-bold"
                   >
                     <ClipboardCheck className="h-3.5 w-3.5" />
                     <span>{t('markAttendance')}</span>
@@ -304,7 +327,7 @@ const FarmerDashboard = () => {
 
                   <button
                     onClick={() => openWageSummaryModal(job)}
-                    className="flex items-center justify-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-medium"
+                    className="flex items-center justify-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-xs font-bold"
                   >
                     <FileSpreadsheet className="h-3.5 w-3.5" />
                     <span>Report</span>
@@ -316,13 +339,21 @@ const FarmerDashboard = () => {
         )}
       </div>
 
-      {/* Post Job Modal */}
+      {/* Post Job Modal (Scrollable Container Pattern) */}
       {showPostModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-xl max-w-2xl w-full p-6 space-y-6 shadow-2xl my-8">
-            <h2 className="text-2xl font-bold text-slate-900">{t('postJob')}</h2>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-2xl w-full my-auto max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+            
+            {/* Modal Header */}
+            <div className="flex justify-between items-center px-6 py-4 border-b bg-slate-50 flex-shrink-0">
+              <h2 className="text-xl font-bold text-slate-900">{t('postJob')}</h2>
+              <button onClick={() => setShowPostModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
 
-            <form onSubmit={handlePostJob} className="space-y-4">
+            {/* Form Container with Scrollbar */}
+            <form onSubmit={handlePostJob} className="flex-1 overflow-y-auto p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Job Title *</label>
                 <input
@@ -444,22 +475,22 @@ const FarmerDashboard = () => {
               </div>
 
               <div className="flex items-center space-x-6 pt-2">
-                <label className="flex items-center space-x-2 text-sm text-slate-700">
+                <label className="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newJob.foodProvided}
                     onChange={(e) => setNewJob({ ...newJob, foodProvided: e.target.checked })}
-                    className="rounded text-emerald-600 focus:ring-emerald-500"
+                    className="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4"
                   />
                   <span>{t('foodProvided')}</span>
                 </label>
 
-                <label className="flex items-center space-x-2 text-sm text-slate-700">
+                <label className="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newJob.accommodationProvided}
                     onChange={(e) => setNewJob({ ...newJob, accommodationProvided: e.target.checked })}
-                    className="rounded text-emerald-600 focus:ring-emerald-500"
+                    className="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4"
                   />
                   <span>{t('accommodationProvided')}</span>
                 </label>
@@ -471,60 +502,60 @@ const FarmerDashboard = () => {
                   rows={3}
                   value={newJob.description}
                   onChange={(e) => setNewJob({ ...newJob, description: e.target.value })}
+                  placeholder="Provide job details, field location landmark..."
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"
                 ></textarea>
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4 border-t">
+              {/* Sticky Action Footer */}
+              <div className="sticky bottom-0 bg-white pt-4 border-t flex justify-end space-x-3 flex-shrink-0 z-10">
                 <button
                   type="button"
                   onClick={() => setShowPostModal(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium"
+                  className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-semibold"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold"
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-extrabold shadow-md transition-colors"
                 >
                   {t('submit')}
                 </button>
               </div>
             </form>
+
           </div>
         </div>
       )}
 
       {/* View Applicants Modal */}
       {selectedJobForApplicants && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-xl max-w-3xl w-full p-6 space-y-6 shadow-2xl my-8">
-            <div className="flex justify-between items-center pb-4 border-b">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-3xl w-full my-auto max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+            <div className="flex justify-between items-center px-6 py-4 border-b bg-slate-50 flex-shrink-0">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">{t('viewApplicants')}</h2>
-                <p className="text-sm text-slate-600">{selectedJobForApplicants.title}</p>
+                <h2 className="text-xl font-bold text-slate-900">{t('viewApplicants')}</h2>
+                <p className="text-xs text-slate-600">{selectedJobForApplicants.title}</p>
               </div>
-              <button
-                onClick={() => setSelectedJobForApplicants(null)}
-                className="text-slate-400 hover:text-slate-600 text-xl font-bold"
-              >
-                ✕
+              <button onClick={() => setSelectedJobForApplicants(null)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="h-6 w-6" />
               </button>
             </div>
 
-            {loadingApplicants ? (
-              <div className="py-8 text-center">Loading applicants...</div>
-            ) : applicants.length === 0 ? (
-              <div className="py-8 text-center text-slate-500">{t('noApplications')}</div>
-            ) : (
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                {applicants.map((app) => (
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {loadingApplicants ? (
+                <div className="py-8 text-center">Loading applicants...</div>
+              ) : applicants.length === 0 ? (
+                <div className="py-8 text-center text-slate-500">{t('noApplications')}</div>
+              ) : (
+                applicants.map((app) => (
                   <div key={app.id} className="border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                       <div className="flex items-center space-x-2">
                         <h4 className="font-bold text-slate-900">{app.labourerName || 'Labourer Candidate'}</h4>
-                        <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded">
-                          Phone: {app.labourerPhoneNumber}
+                        <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-mono">
+                          📱 {app.labourerPhoneNumber}
                         </span>
                       </div>
 
@@ -547,13 +578,13 @@ const FarmerDashboard = () => {
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => handleUpdateApplicantStatus(app.id, 'ACCEPTED')}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3.5 py-1.5 rounded-lg font-bold shadow-sm"
                           >
                             {t('accept')}
                           </button>
                           <button
                             onClick={() => handleUpdateApplicantStatus(app.id, 'REJECTED')}
-                            className="bg-rose-600 hover:bg-rose-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold"
+                            className="bg-rose-600 hover:bg-rose-700 text-white text-xs px-3.5 py-1.5 rounded-lg font-bold shadow-sm"
                           >
                             {t('reject')}
                           </button>
@@ -564,10 +595,10 @@ const FarmerDashboard = () => {
                         <button
                           onClick={() => setSelectedWorkerForRating({
                             jobId: selectedJobForApplicants.id,
-                            labourerUserId: app.labourerProfileId, // reviewee user id
+                            labourerUserId: app.labourerProfileId,
                             labourerName: app.labourerName
                           })}
-                          className="flex items-center space-x-1 text-amber-600 hover:text-amber-700 font-bold text-xs bg-amber-50 px-2.5 py-1 rounded-md"
+                          className="flex items-center space-x-1 text-amber-800 hover:text-amber-900 font-bold text-xs bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg shadow-sm"
                         >
                           <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
                           <span>{t('rateWorker')}</span>
@@ -575,28 +606,32 @@ const FarmerDashboard = () => {
                       )}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {/* Log Attendance Modal */}
       {selectedJobForAttendance && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <h2 className="text-xl font-bold text-slate-900">{t('logAttendance')}</h2>
-            <p className="text-xs text-slate-500">{selectedJobForAttendance.title}</p>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-md w-full my-auto max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+            <div className="flex justify-between items-center px-6 py-4 border-b bg-slate-50 flex-shrink-0">
+              <h2 className="text-lg font-bold text-slate-900">{t('logAttendance')}</h2>
+              <button onClick={() => setSelectedJobForAttendance(null)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
 
-            <form onSubmit={handleLogAttendance} className="space-y-4">
+            <form onSubmit={handleLogAttendance} className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Select Accepted Worker *</label>
                 <select
                   required
                   value={attendanceData.labourerProfileId}
                   onChange={(e) => setAttendanceData({ ...attendanceData, labourerProfileId: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 font-semibold"
                 >
                   <option value="">-- Choose Worker --</option>
                   {applicants.map((app) => (
@@ -624,7 +659,7 @@ const FarmerDashboard = () => {
                   <select
                     value={attendanceData.status}
                     onChange={(e) => setAttendanceData({ ...attendanceData, status: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    className="w-full px-3 py-2 border rounded-lg text-sm font-bold text-emerald-800"
                   >
                     <option value="PRESENT">{t('present')}</option>
                     <option value="HALF_DAY">{t('halfDay')}</option>
@@ -656,7 +691,7 @@ const FarmerDashboard = () => {
                 />
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4 border-t">
+              <div className="sticky bottom-0 bg-white pt-4 border-t flex justify-end space-x-3 flex-shrink-0 z-10">
                 <button
                   type="button"
                   onClick={() => setSelectedJobForAttendance(null)}
@@ -666,7 +701,7 @@ const FarmerDashboard = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold"
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-extrabold shadow-md"
                 >
                   {t('submit')}
                 </button>
@@ -678,79 +713,84 @@ const FarmerDashboard = () => {
 
       {/* Wage Summary Report Modal */}
       {selectedJobForSummary && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-xl max-w-2xl w-full p-6 space-y-6 shadow-2xl my-8">
-            <div className="flex justify-between items-center pb-4 border-b">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-2xl w-full my-auto max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+            <div className="flex justify-between items-center px-6 py-4 border-b bg-slate-50 flex-shrink-0">
               <div>
                 <h2 className="text-xl font-bold text-slate-900">{t('wageSummary')}</h2>
-                <p className="text-sm text-slate-600">{selectedJobForSummary.title}</p>
+                <p className="text-xs text-slate-600">{selectedJobForSummary.title}</p>
               </div>
-              <button
-                onClick={() => setSelectedJobForSummary(null)}
-                className="text-slate-400 hover:text-slate-600 text-xl font-bold"
-              >
-                ✕
+              <button onClick={() => setSelectedJobForSummary(null)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="h-6 w-6" />
               </button>
             </div>
 
-            {loadingSummary ? (
-              <div className="py-8 text-center">Loading wage summary report...</div>
-            ) : wageSummary && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl text-center">
-                  <div>
-                    <span className="text-xs text-slate-500 block">{t('totalDaysPresent')}</span>
-                    <span className="text-lg font-bold text-emerald-700">{wageSummary.totalDaysPresent}</span>
+            <div className="p-6 overflow-y-auto space-y-6 flex-1">
+              {loadingSummary ? (
+                <div className="py-8 text-center">Loading wage summary report...</div>
+              ) : wageSummary && (
+                <>
+                  <div className="grid grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl text-center border">
+                    <div>
+                      <span className="text-xs text-slate-500 block">{t('totalDaysPresent')}</span>
+                      <span className="text-lg font-bold text-emerald-700">{wageSummary.totalDaysPresent}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-slate-500 block">{t('totalDaysHalfDay')}</span>
+                      <span className="text-lg font-bold text-amber-700">{wageSummary.totalDaysHalfDay}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-slate-500 block">{t('totalWages')}</span>
+                      <span className="text-lg font-bold text-slate-900">₹{wageSummary.totalWageEarned}</span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-xs text-slate-500 block">{t('totalDaysHalfDay')}</span>
-                    <span className="text-lg font-bold text-amber-700">{wageSummary.totalDaysHalfDay}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-500 block">{t('totalWages')}</span>
-                    <span className="text-lg font-bold text-slate-900">₹{wageSummary.totalWageEarned}</span>
-                  </div>
-                </div>
 
-                <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-2">
-                  <h4 className="font-bold text-slate-800 text-sm">Attendance Log Records</h4>
-                  {wageSummary.attendanceRecords.length === 0 ? (
-                    <p className="text-xs text-slate-500">No attendance logged yet.</p>
-                  ) : (
-                    wageSummary.attendanceRecords.map((record) => (
-                      <div key={record.id} className="border p-3 rounded-lg flex justify-between items-center text-xs">
-                        <div>
-                          <span className="font-bold text-slate-900">{record.labourerName}</span>
-                          <p className="text-slate-500">{record.workDate} | {record.hoursWorked} hrs</p>
+                  <div className="space-y-2">
+                    <h4 className="font-bold text-slate-800 text-sm">Attendance Log Records</h4>
+                    {wageSummary.attendanceRecords.length === 0 ? (
+                      <p className="text-xs text-slate-500">No attendance logged yet.</p>
+                    ) : (
+                      wageSummary.attendanceRecords.map((record) => (
+                        <div key={record.id} className="border p-3 rounded-lg flex justify-between items-center text-xs">
+                          <div>
+                            <span className="font-bold text-slate-900">{record.labourerName}</span>
+                            <p className="text-slate-500">{record.workDate} | {record.hoursWorked} hrs</p>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-bold text-emerald-700">₹{record.wageCalculated}</span>
+                            <span className="block text-slate-500">{record.status}</span>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <span className="font-bold text-emerald-700">₹{record.wageCalculated}</span>
-                          <span className="block text-slate-500">{record.status}</span>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {/* Rate Worker Star Rating Modal */}
       {selectedWorkerForRating && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <h2 className="text-xl font-bold text-slate-900">{t('rateWorker')}</h2>
-            <p className="text-sm text-slate-600">Rate performance for: <strong>{selectedWorkerForRating.labourerName}</strong></p>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-md w-full my-auto max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+            <div className="flex justify-between items-center px-6 py-4 border-b bg-slate-50 flex-shrink-0">
+              <h2 className="text-xl font-bold text-slate-900">{t('rateWorker')}</h2>
+              <button onClick={() => setSelectedWorkerForRating(null)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
 
-            <form onSubmit={handleSubmitRating} className="space-y-4">
+            <form onSubmit={handleSubmitRating} className="p-6 space-y-4 overflow-y-auto flex-1">
+              <p className="text-sm text-slate-600">Rate worker: <strong>{selectedWorkerForRating.labourerName}</strong></p>
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('ratingScore')}</label>
                 <select
                   value={ratingData.ratingValue}
                   onChange={(e) => setRatingData({ ...ratingData, ratingValue: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 font-bold"
                 >
                   <option value={5}>⭐⭐⭐⭐⭐ (5 - Excellent)</option>
                   <option value={4}>⭐⭐⭐⭐ (4 - Very Good)</option>
@@ -771,7 +811,7 @@ const FarmerDashboard = () => {
                 ></textarea>
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4 border-t">
+              <div className="sticky bottom-0 bg-white pt-4 border-t flex justify-end space-x-3 flex-shrink-0 z-10">
                 <button
                   type="button"
                   onClick={() => setSelectedWorkerForRating(null)}
@@ -781,7 +821,7 @@ const FarmerDashboard = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-bold"
+                  className="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-extrabold shadow-md"
                 >
                   {t('submitRating')}
                 </button>

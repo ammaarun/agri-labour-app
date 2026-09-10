@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Search, MapPin, DollarSign, Briefcase, CheckCircle, Clock, AlertCircle, User, Edit3, Send, RefreshCw, Star, Calendar, FileText } from 'lucide-react';
+import { Search, MapPin, DollarSign, Briefcase, CheckCircle, Clock, AlertCircle, User, Edit3, Send, RefreshCw, Star, Calendar, FileText, X, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const LabourerDashboard = () => {
-  const { user } = useAuth();
+  const { user, logoutUser } = useAuth();
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('search'); // 'search' | 'applications' | 'earnings'
   
@@ -181,6 +183,11 @@ const LabourerDashboard = () => {
     });
   };
 
+  const handleLogoutAndSwitch = () => {
+    logoutUser();
+    navigate('/login');
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       
@@ -189,21 +196,35 @@ const LabourerDashboard = () => {
         <div>
           <div className="flex items-center space-x-3">
             <h1 className="text-3xl font-extrabold text-slate-900">{t('labourerDashboard')}</h1>
+            <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs px-2.5 py-0.5 rounded-full font-bold">
+              🛠️ Logged in as Labourer
+            </span>
             {profile?.verified && (
-              <span className="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-bold">
+              <span className="bg-emerald-600 text-white text-xs px-2.5 py-0.5 rounded-full font-bold">
                 ✓ Verified Worker
               </span>
             )}
           </div>
           <p className="text-slate-600 mt-1">Find agricultural jobs, track daily attendance earnings, and rate employers.</p>
         </div>
-        <button
-          onClick={() => setShowProfileModal(true)}
-          className="flex items-center space-x-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg font-bold transition-colors"
-        >
-          <User className="h-4 w-4" />
-          <span>{t('editProfile')}</span>
-        </button>
+
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleLogoutAndSwitch}
+            className="flex items-center space-x-1 bg-slate-200 hover:bg-slate-300 text-slate-700 px-3.5 py-2 rounded-lg font-bold text-xs transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Switch Role / Logout</span>
+          </button>
+
+          <button
+            onClick={() => setShowProfileModal(true)}
+            className="flex items-center space-x-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg font-bold transition-colors"
+          >
+            <User className="h-4 w-4" />
+            <span>{t('editProfile')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Navigation Tabs */}
@@ -269,7 +290,7 @@ const LabourerDashboard = () => {
 
             <button
               onClick={fetchJobs}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg font-bold text-sm flex items-center space-x-1"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg font-bold text-sm flex items-center space-x-1 shadow"
             >
               <Search className="h-4 w-4" />
               <span>Search</span>
@@ -282,7 +303,7 @@ const LabourerDashboard = () => {
               <RefreshCw className="h-8 w-8 text-emerald-600 animate-spin" />
             </div>
           ) : jobs.length === 0 ? (
-            <div className="bg-white rounded-xl p-8 text-center border border-slate-200 text-slate-500">
+            <div className="bg-white rounded-xl p-8 text-center border border-slate-200 text-slate-500 shadow-sm">
               {t('noJobsFound')}
             </div>
           ) : (
@@ -323,7 +344,7 @@ const LabourerDashboard = () => {
                   <div className="pt-4 border-t border-slate-100">
                     <button
                       onClick={() => setSelectedJobForApply(job)}
-                      className="w-full flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-sm font-bold transition-colors"
+                      className="w-full flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-bold shadow transition-colors"
                     >
                       <Send className="h-4 w-4" />
                       <span>{t('apply')}</span>
@@ -344,13 +365,13 @@ const LabourerDashboard = () => {
               <RefreshCw className="h-8 w-8 text-emerald-600 animate-spin" />
             </div>
           ) : myApplications.length === 0 ? (
-            <div className="bg-white rounded-xl p-8 text-center border border-slate-200 text-slate-500">
+            <div className="bg-white rounded-xl p-8 text-center border border-slate-200 text-slate-500 shadow-sm">
               {t('noApplications')}
             </div>
           ) : (
             <div className="space-y-4">
               {myApplications.map((app) => (
-                <div key={app.id} className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div key={app.id} className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
                   <div>
                     <h3 className="text-lg font-bold text-slate-900">{app.jobTitle}</h3>
                     <p className="text-sm text-slate-600">{app.farmLocation} • ₹{app.wageAmount} / {app.wageBasis}</p>
@@ -373,10 +394,10 @@ const LabourerDashboard = () => {
                       <button
                         onClick={() => setSelectedFarmerForRating({
                           jobId: app.jobId,
-                          farmerUserId: app.farmerId, // or farmer user ID
+                          farmerUserId: app.farmerId,
                           farmerName: app.farmerName
                         })}
-                        className="flex items-center space-x-1 text-amber-600 hover:text-amber-700 font-bold text-xs bg-amber-50 px-2.5 py-1 rounded-md"
+                        className="flex items-center space-x-1 text-amber-800 hover:text-amber-900 font-bold text-xs bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg shadow-sm"
                       >
                         <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
                         <span>{t('rateFarmer')}</span>
@@ -462,24 +483,30 @@ const LabourerDashboard = () => {
 
       {/* Apply Modal */}
       {selectedJobForApply && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <h3 className="text-xl font-bold text-slate-900">{t('apply')}</h3>
-            <p className="text-sm text-slate-600">{selectedJobForApply.title}</p>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-md w-full my-auto max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+            <div className="flex justify-between items-center px-6 py-4 border-b bg-slate-50 flex-shrink-0">
+              <h3 className="text-xl font-bold text-slate-900">{t('apply')}</h3>
+              <button onClick={() => setSelectedJobForApply(null)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
 
-            <form onSubmit={handleApply} className="space-y-4">
+            <form onSubmit={handleApply} className="p-6 space-y-4 overflow-y-auto flex-1">
+              <p className="text-sm font-semibold text-slate-700">{selectedJobForApply.title}</p>
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('remarks')}</label>
                 <textarea
                   rows={3}
                   value={applyRemarks}
                   onChange={(e) => setApplyRemarks(e.target.value)}
-                  placeholder="I am available for all 4 days with experience in harvesting..."
+                  placeholder="I am available for all work days with relevant harvesting experience..."
                   className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
                 ></textarea>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-2">
+              <div className="sticky bottom-0 bg-white pt-4 border-t flex justify-end space-x-3 flex-shrink-0 z-10">
                 <button
                   type="button"
                   onClick={() => setSelectedJobForApply(null)}
@@ -489,7 +516,7 @@ const LabourerDashboard = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold"
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-extrabold shadow-md"
                 >
                   {t('submit')}
                 </button>
@@ -501,18 +528,24 @@ const LabourerDashboard = () => {
 
       {/* Rate Farmer Modal */}
       {selectedFarmerForRating && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <h3 className="text-xl font-bold text-slate-900">{t('rateFarmer')}</h3>
-            <p className="text-sm text-slate-600">Rate farmer: <strong>{selectedFarmerForRating.farmerName}</strong></p>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-md w-full my-auto max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+            <div className="flex justify-between items-center px-6 py-4 border-b bg-slate-50 flex-shrink-0">
+              <h3 className="text-xl font-bold text-slate-900">{t('rateFarmer')}</h3>
+              <button onClick={() => setSelectedFarmerForRating(null)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
 
-            <form onSubmit={handleSubmitRating} className="space-y-4">
+            <form onSubmit={handleSubmitRating} className="p-6 space-y-4 overflow-y-auto flex-1">
+              <p className="text-sm text-slate-600">Rate employer: <strong>{selectedFarmerForRating.farmerName}</strong></p>
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('ratingScore')}</label>
                 <select
                   value={ratingData.ratingValue}
                   onChange={(e) => setRatingData({ ...ratingData, ratingValue: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 font-bold"
                 >
                   <option value={5}>⭐⭐⭐⭐⭐ (5 - Excellent)</option>
                   <option value={4}>⭐⭐⭐⭐ (4 - Very Good)</option>
@@ -533,7 +566,7 @@ const LabourerDashboard = () => {
                 ></textarea>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-2">
+              <div className="sticky bottom-0 bg-white pt-4 border-t flex justify-end space-x-3 flex-shrink-0 z-10">
                 <button
                   type="button"
                   onClick={() => setSelectedFarmerForRating(null)}
@@ -543,7 +576,7 @@ const LabourerDashboard = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-bold"
+                  className="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-extrabold shadow-md"
                 >
                   {t('submitRating')}
                 </button>
@@ -555,11 +588,16 @@ const LabourerDashboard = () => {
 
       {/* Edit Profile Modal */}
       {showProfileModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 space-y-4 shadow-2xl my-8">
-            <h3 className="text-xl font-bold text-slate-900">{t('editProfile')}</h3>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-lg w-full my-auto max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+            <div className="flex justify-between items-center px-6 py-4 border-b bg-slate-50 flex-shrink-0">
+              <h3 className="text-xl font-bold text-slate-900">{t('editProfile')}</h3>
+              <button onClick={() => setShowProfileModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
 
-            <form onSubmit={handleUpdateProfile} className="space-y-4">
+            <form onSubmit={handleUpdateProfile} className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Full Name *</label>
                 <input
@@ -624,7 +662,7 @@ const LabourerDashboard = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4 border-t">
+              <div className="sticky bottom-0 bg-white pt-4 border-t flex justify-end space-x-3 flex-shrink-0 z-10">
                 <button
                   type="button"
                   onClick={() => setShowProfileModal(false)}
@@ -634,7 +672,7 @@ const LabourerDashboard = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold"
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-extrabold shadow-md"
                 >
                   {t('submit')}
                 </button>
