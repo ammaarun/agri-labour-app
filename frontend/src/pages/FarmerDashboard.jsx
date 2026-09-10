@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { PlusCircle, Users, CheckCircle, XCircle, Clock, MapPin, Calendar, DollarSign, AlertCircle, RefreshCw } from 'lucide-react';
+import { PlusCircle, Users, CheckCircle, XCircle, Clock, MapPin, Calendar, DollarSign, AlertCircle, RefreshCw, Star, ClipboardCheck, FileSpreadsheet } from 'lucide-react';
 
 const FarmerDashboard = () => {
   const { user } = useAuth();
@@ -18,6 +18,26 @@ const FarmerDashboard = () => {
   const [selectedJobForApplicants, setSelectedJobForApplicants] = useState(null);
   const [applicants, setApplicants] = useState([]);
   const [loadingApplicants, setLoadingApplicants] = useState(false);
+
+  // Attendance & Rating Modals
+  const [selectedJobForAttendance, setSelectedJobForAttendance] = useState(null);
+  const [attendanceData, setAttendanceData] = useState({
+    labourerProfileId: '',
+    workDate: new Date().toISOString().split('T')[0],
+    status: 'PRESENT',
+    hoursWorked: 8,
+    remarks: ''
+  });
+
+  const [selectedJobForSummary, setSelectedJobForSummary] = useState(null);
+  const [wageSummary, setWageSummary] = useState(null);
+  const [loadingSummary, setLoadingSummary] = useState(false);
+
+  const [selectedWorkerForRating, setSelectedWorkerForRating] = useState(null);
+  const [ratingData, setRatingData] = useState({
+    ratingValue: 5,
+    reviewText: ''
+  });
 
   // Post Job Form State
   const [newJob, setNewJob] = useState({
@@ -36,7 +56,6 @@ const FarmerDashboard = () => {
     accommodationProvided: false,
   });
 
-  // Action status remark state
   const [actionRemark, setActionRemark] = useState('');
 
   useEffect(() => {
@@ -112,13 +131,63 @@ const FarmerDashboard = () => {
         remarks: actionRemark,
       });
       setActionRemark('');
-      // Refresh applicants & jobs
       if (selectedJobForApplicants) {
         openApplicantsModal(selectedJobForApplicants);
       }
       fetchFarmerJobs();
     } catch (err) {
       alert('Failed to update application status');
+    }
+  };
+
+  const handleLogAttendance = async (e) => {
+    e.preventDefault();
+    if (!attendanceData.labourerProfileId) {
+      alert('Please select a worker');
+      return;
+    }
+    try {
+      await api.post(`/attendance/farmer/${user.userId}`, {
+        jobId: selectedJobForAttendance.id,
+        labourerProfileId: Number(attendanceData.labourerProfileId),
+        workDate: attendanceData.workDate,
+        status: attendanceData.status,
+        hoursWorked: Number(attendanceData.hoursWorked),
+        remarks: attendanceData.remarks
+      });
+      alert('Attendance logged successfully!');
+      setSelectedJobForAttendance(null);
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to log attendance');
+    }
+  };
+
+  const openWageSummaryModal = async (job) => {
+    setSelectedJobForSummary(job);
+    setLoadingSummary(true);
+    try {
+      const res = await api.get(`/attendance/farmer/${user.userId}/job/${job.id}/summary`);
+      setWageSummary(res.data);
+    } catch (err) {
+      alert('Failed to load wage summary report');
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
+  const handleSubmitRating = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post(`/ratings/${user.userId}`, {
+        jobId: selectedWorkerForRating.jobId,
+        revieweeUserId: selectedWorkerForRating.labourerUserId,
+        ratingValue: Number(ratingData.ratingValue),
+        reviewText: ratingData.reviewText
+      });
+      alert('Star rating & review submitted successfully!');
+      setSelectedWorkerForRating(null);
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to submit rating');
     }
   };
 
@@ -138,7 +207,7 @@ const FarmerDashboard = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-slate-200 mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900">{t('farmerDashboard')}</h1>
-          <p className="text-slate-600 mt-1">Manage your farm jobs and review labourer applications.</p>
+          <p className="text-slate-600 mt-1">Manage farm jobs, review applicants, track attendance, and rate workers.</p>
         </div>
         <button
           onClick={() => setShowPostModal(true)}
@@ -210,13 +279,35 @@ const FarmerDashboard = () => {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100">
+                <div className="pt-4 border-t border-slate-100 grid grid-cols-3 gap-2">
                   <button
                     onClick={() => openApplicantsModal(job)}
-                    className="w-full flex items-center justify-center space-x-2 bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+                    className="flex items-center justify-center space-x-1 bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg text-xs font-medium"
                   >
-                    <Users className="h-4 w-4" />
+                    <Users className="h-3.5 w-3.5" />
                     <span>{t('viewApplicants')}</span>
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      setSelectedJobForAttendance(job);
+                      // Load accepted workers for dropdown
+                      const res = await api.get(`/applications/farmer/${user.userId}/job/${job.id}`);
+                      const acceptedList = res.data.filter(a => a.status === 'ACCEPTED');
+                      setApplicants(acceptedList);
+                    }}
+                    className="flex items-center justify-center space-x-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-xs font-medium"
+                  >
+                    <ClipboardCheck className="h-3.5 w-3.5" />
+                    <span>{t('markAttendance')}</span>
+                  </button>
+
+                  <button
+                    onClick={() => openWageSummaryModal(job)}
+                    className="flex items-center justify-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-medium"
+                  >
+                    <FileSpreadsheet className="h-3.5 w-3.5" />
+                    <span>Report</span>
                   </button>
                 </div>
               </div>
@@ -468,11 +559,234 @@ const FarmerDashboard = () => {
                           </button>
                         </div>
                       )}
+
+                      {app.status === 'ACCEPTED' && (
+                        <button
+                          onClick={() => setSelectedWorkerForRating({
+                            jobId: selectedJobForApplicants.id,
+                            labourerUserId: app.labourerProfileId, // reviewee user id
+                            labourerName: app.labourerName
+                          })}
+                          className="flex items-center space-x-1 text-amber-600 hover:text-amber-700 font-bold text-xs bg-amber-50 px-2.5 py-1 rounded-md"
+                        >
+                          <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+                          <span>{t('rateWorker')}</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Log Attendance Modal */}
+      {selectedJobForAttendance && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <h2 className="text-xl font-bold text-slate-900">{t('logAttendance')}</h2>
+            <p className="text-xs text-slate-500">{selectedJobForAttendance.title}</p>
+
+            <form onSubmit={handleLogAttendance} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Select Accepted Worker *</label>
+                <select
+                  required
+                  value={attendanceData.labourerProfileId}
+                  onChange={(e) => setAttendanceData({ ...attendanceData, labourerProfileId: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="">-- Choose Worker --</option>
+                  {applicants.map((app) => (
+                    <option key={app.labourerProfileId} value={app.labourerProfileId}>
+                      {app.labourerName} ({app.labourerPhoneNumber})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">{t('workDate')} *</label>
+                  <input
+                    type="date"
+                    required
+                    value={attendanceData.workDate}
+                    onChange={(e) => setAttendanceData({ ...attendanceData, workDate: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Status *</label>
+                  <select
+                    value={attendanceData.status}
+                    onChange={(e) => setAttendanceData({ ...attendanceData, status: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                  >
+                    <option value="PRESENT">{t('present')}</option>
+                    <option value="HALF_DAY">{t('halfDay')}</option>
+                    <option value="ABSENT">{t('absent')}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('hoursWorked')}</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={24}
+                  value={attendanceData.hoursWorked}
+                  onChange={(e) => setAttendanceData({ ...attendanceData, hoursWorked: Number(e.target.value) })}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('remarks')}</label>
+                <input
+                  type="text"
+                  value={attendanceData.remarks}
+                  onChange={(e) => setAttendanceData({ ...attendanceData, remarks: e.target.value })}
+                  placeholder="Good work performance"
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setSelectedJobForAttendance(null)}
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold"
+                >
+                  {t('submit')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Wage Summary Report Modal */}
+      {selectedJobForSummary && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-2xl w-full p-6 space-y-6 shadow-2xl my-8">
+            <div className="flex justify-between items-center pb-4 border-b">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">{t('wageSummary')}</h2>
+                <p className="text-sm text-slate-600">{selectedJobForSummary.title}</p>
+              </div>
+              <button
+                onClick={() => setSelectedJobForSummary(null)}
+                className="text-slate-400 hover:text-slate-600 text-xl font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {loadingSummary ? (
+              <div className="py-8 text-center">Loading wage summary report...</div>
+            ) : wageSummary && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl text-center">
+                  <div>
+                    <span className="text-xs text-slate-500 block">{t('totalDaysPresent')}</span>
+                    <span className="text-lg font-bold text-emerald-700">{wageSummary.totalDaysPresent}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 block">{t('totalDaysHalfDay')}</span>
+                    <span className="text-lg font-bold text-amber-700">{wageSummary.totalDaysHalfDay}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 block">{t('totalWages')}</span>
+                    <span className="text-lg font-bold text-slate-900">₹{wageSummary.totalWageEarned}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-2">
+                  <h4 className="font-bold text-slate-800 text-sm">Attendance Log Records</h4>
+                  {wageSummary.attendanceRecords.length === 0 ? (
+                    <p className="text-xs text-slate-500">No attendance logged yet.</p>
+                  ) : (
+                    wageSummary.attendanceRecords.map((record) => (
+                      <div key={record.id} className="border p-3 rounded-lg flex justify-between items-center text-xs">
+                        <div>
+                          <span className="font-bold text-slate-900">{record.labourerName}</span>
+                          <p className="text-slate-500">{record.workDate} | {record.hoursWorked} hrs</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-bold text-emerald-700">₹{record.wageCalculated}</span>
+                          <span className="block text-slate-500">{record.status}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Rate Worker Star Rating Modal */}
+      {selectedWorkerForRating && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <h2 className="text-xl font-bold text-slate-900">{t('rateWorker')}</h2>
+            <p className="text-sm text-slate-600">Rate performance for: <strong>{selectedWorkerForRating.labourerName}</strong></p>
+
+            <form onSubmit={handleSubmitRating} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('ratingScore')}</label>
+                <select
+                  value={ratingData.ratingValue}
+                  onChange={(e) => setRatingData({ ...ratingData, ratingValue: Number(e.target.value) })}
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value={5}>⭐⭐⭐⭐⭐ (5 - Excellent)</option>
+                  <option value={4}>⭐⭐⭐⭐ (4 - Very Good)</option>
+                  <option value={3}>⭐⭐⭐ (3 - Average)</option>
+                  <option value={2}>⭐⭐ (2 - Below Average)</option>
+                  <option value={1}>⭐ (1 - Poor)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('reviewText')}</label>
+                <textarea
+                  rows={3}
+                  value={ratingData.reviewText}
+                  onChange={(e) => setRatingData({ ...ratingData, reviewText: e.target.value })}
+                  placeholder="Hardworking worker, arrived on time."
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+                ></textarea>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setSelectedWorkerForRating(null)}
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-bold"
+                >
+                  {t('submitRating')}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

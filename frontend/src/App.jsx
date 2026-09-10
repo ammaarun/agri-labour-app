@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import FarmerDashboard from './pages/FarmerDashboard';
 import LabourerDashboard from './pages/LabourerDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -17,6 +18,7 @@ const ProtectedRoute = ({ children, allowedRole }) => {
   }
 
   if (allowedRole && user.role !== allowedRole) {
+    if (user.role === 'ADMIN') return <Navigate to="/admin" replace />;
     return <Navigate to={user.role === 'FARMER' ? '/farmer' : '/labourer'} replace />;
   }
 
@@ -27,6 +29,7 @@ const ProtectedRoute = ({ children, allowedRole }) => {
 const HomeRedirect = () => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'ADMIN') return <Navigate to="/admin" replace />;
   return <Navigate to={user.role === 'FARMER' ? '/farmer' : '/labourer'} replace />;
 };
 
@@ -55,6 +58,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRole="LABOURER">
                       <LabourerDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute allowedRole="ADMIN">
+                      <AdminDashboard />
                     </ProtectedRoute>
                   }
                 />

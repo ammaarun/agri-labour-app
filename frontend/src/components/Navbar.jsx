@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Sprout, Globe, LogOut, User, Briefcase } from 'lucide-react';
+import { Sprout, Globe, LogOut, User, ShieldCheck } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logoutUser } = useAuth();
@@ -52,8 +52,19 @@ const Navbar = () => {
             {/* Authenticated Links */}
             {user ? (
               <div className="flex items-center space-x-3">
+                {user.role === 'ADMIN' && (
+                  <Link
+                    to="/admin"
+                    className="flex items-center space-x-1 bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-colors"
+                  >
+                    <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                    <span>{t('adminDashboard')}</span>
+                  </Link>
+                )}
+
                 <span className="bg-amber-400 text-emerald-950 px-2.5 py-1 rounded-full text-xs font-bold uppercase">
-                  {user.role === 'FARMER' ? t('farmer') : t('labourer')}
+                  {user.role === 'FARMER' ? t('farmer') :
+                   user.role === 'ADMIN' ? t('admin') : t('labourer')}
                 </span>
 
                 <button
