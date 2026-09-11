@@ -31,6 +31,21 @@ public class AuthService {
     private final FarmerProfileRepository farmerProfileRepository;
 
     @Transactional
+    public void seedAdminIfEmpty() {
+        if (!userRepository.existsByPhoneNumber("9999999999")) {
+            User admin = User.builder()
+                    .phoneNumber("9999999999")
+                    .email("admin@agrilabour.com")
+                    .password(passwordEncoder.encode("AdminPassword123"))
+                    .role(Role.ADMIN)
+                    .isActive(true)
+                    .build();
+            userRepository.save(admin);
+            System.out.println(">>> Seeded default System Admin: Phone [9999999999] / Password [AdminPassword123]");
+        }
+    }
+
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         // 1. Validation
         if (userRepository.existsByPhoneNumber(request.getPhoneNumber())) {

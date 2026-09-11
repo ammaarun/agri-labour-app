@@ -32,7 +32,9 @@ const Register = () => {
 
       loginUser(response.data);
 
-      if (response.data.role === 'FARMER') {
+      if (response.data.role === 'ADMIN') {
+        navigate('/admin');
+      } else if (response.data.role === 'FARMER') {
         navigate('/farmer');
       } else {
         navigate('/labourer');
@@ -78,31 +80,44 @@ const Register = () => {
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 {t('role')}
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setRole('LABOURER')}
-                  className={`py-3 px-4 rounded-lg font-bold text-sm border flex items-center justify-center space-x-2 transition-all ${
+                  className={`py-2.5 px-2 rounded-lg font-bold text-xs border flex items-center justify-center space-x-1 transition-all ${
                     role === 'LABOURER'
                       ? 'bg-emerald-50 border-emerald-600 text-emerald-800 ring-2 ring-emerald-500'
                       : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <UserCheck className="h-4 w-4" />
+                  <UserCheck className="h-3.5 w-3.5" />
                   <span>{t('labourer')}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setRole('FARMER')}
-                  className={`py-3 px-4 rounded-lg font-bold text-sm border flex items-center justify-center space-x-2 transition-all ${
+                  className={`py-2.5 px-2 rounded-lg font-bold text-xs border flex items-center justify-center space-x-1 transition-all ${
                     role === 'FARMER'
                       ? 'bg-amber-50 border-amber-600 text-amber-900 ring-2 ring-amber-500'
                       : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <UserCheck className="h-4 w-4" />
+                  <UserCheck className="h-3.5 w-3.5" />
                   <span>{t('farmer')}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRole('ADMIN')}
+                  className={`py-2.5 px-2 rounded-lg font-bold text-xs border flex items-center justify-center space-x-1 transition-all ${
+                    role === 'ADMIN'
+                      ? 'bg-slate-900 border-slate-900 text-white ring-2 ring-slate-700'
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <UserCheck className="h-3.5 w-3.5" />
+                  <span>{t('admin')}</span>
                 </button>
               </div>
             </div>

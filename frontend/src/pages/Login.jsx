@@ -24,7 +24,9 @@ const Login = () => {
       const response = await api.post('/auth/login', { phoneNumber, password });
       loginUser(response.data);
 
-      if (response.data.role === 'FARMER') {
+      if (response.data.role === 'ADMIN') {
+        navigate('/admin');
+      } else if (response.data.role === 'FARMER') {
         navigate('/farmer');
       } else {
         navigate('/labourer');
