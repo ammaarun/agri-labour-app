@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { PlusCircle, Users, CheckCircle, XCircle, Clock, MapPin, Calendar, DollarSign, AlertCircle, RefreshCw, Star, ClipboardCheck, FileSpreadsheet, X, LogOut } from 'lucide-react';
+import { PlusCircle, Users, CheckCircle, XCircle, Clock, MapPin, Calendar, DollarSign, AlertCircle, RefreshCw, Star, ClipboardCheck, FileSpreadsheet, X, LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const FarmerDashboard = () => {
@@ -20,6 +20,16 @@ const FarmerDashboard = () => {
   const [selectedJobForApplicants, setSelectedJobForApplicants] = useState(null);
   const [applicants, setApplicants] = useState([]);
   const [loadingApplicants, setLoadingApplicants] = useState(false);
+
+  // Profile Modal State
+  const [profile, setProfile] = useState(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [farmerProfileForm, setFarmerProfileForm] = useState({
+    fullName: '',
+    farmName: '',
+    farmLocation: '',
+    contactNumber: ''
+  });
 
   // Attendance & Rating Modals
   const [selectedJobForAttendance, setSelectedJobForAttendance] = useState(null);
@@ -63,7 +73,35 @@ const FarmerDashboard = () => {
   useEffect(() => {
     fetchFarmerJobs();
     fetchSkills();
+    fetchFarmerProfile();
   }, [language]);
+
+  const fetchFarmerProfile = async () => {
+    try {
+      const res = await api.get(`/profiles/farmer/${user.userId}`);
+      setProfile(res.data);
+      setFarmerProfileForm({
+        fullName: res.data.fullName || '',
+        farmName: res.data.farmName || '',
+        farmLocation: res.data.farmLocation || '',
+        contactNumber: res.data.contactNumber || ''
+      });
+    } catch (err) {
+      console.error('Failed to fetch farmer profile');
+    }
+  };
+
+  const handleUpdateFarmerProfile = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put(`/profiles/farmer/${user.userId}`, farmerProfileForm);
+      setShowProfileModal(false);
+      fetchFarmerProfile();
+      alert('Farmer profile updated successfully!');
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to update profile');
+    }
+  };
 
   const fetchFarmerJobs = async () => {
     setLoading(true);
@@ -223,6 +261,14 @@ const FarmerDashboard = () => {
         </div>
 
         <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setShowProfileModal(true)}
+            className="flex items-center space-x-1.5 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-bold text-xs shadow transition-colors"
+          >
+            <User className="h-4 w-4" />
+            <span>{t('editProfile')}</span>
+          </button>
+
           <button
             onClick={handleLogoutAndSwitch}
             className="flex items-center space-x-1 bg-slate-200 hover:bg-slate-300 text-slate-700 px-3.5 py-2 rounded-lg font-bold text-xs transition-colors"
@@ -824,6 +870,83 @@ const FarmerDashboard = () => {
                   className="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-extrabold shadow-md"
                 >
                   {t('submitRating')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Farmer Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-lg w-full my-auto max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+            <div className="flex justify-between items-center px-6 py-4 border-b bg-slate-50 flex-shrink-0">
+              <h3 className="text-xl font-bold text-slate-900">{t('editProfile')}</h3>
+              <button onClick={() => setShowProfileModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateFarmerProfile} className="p-6 space-y-4 overflow-y-auto flex-1">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={farmerProfileForm.fullName}
+                  onChange={(e) => setFarmerProfileForm({ ...farmerProfileForm, fullName: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Farm Name</label>
+                <input
+                  type="text"
+                  value={farmerProfileForm.farmName}
+                  onChange={(e) => setFarmerProfileForm({ ...farmerProfileForm, farmName: e.target.value })}
+                  placeholder="e.g. Sri Lakshmi Farms"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('location')} / Farm Location *</label>
+                <input
+                  type="text"
+                  required
+                  value={farmerProfileForm.farmLocation}
+                  onChange={(e) => setFarmerProfileForm({ ...farmerProfileForm, farmLocation: e.target.value })}
+                  placeholder="e.g. Guntur, Andhra Pradesh"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Contact Number</label>
+                <input
+                  type="text"
+                  value={farmerProfileForm.contactNumber}
+                  onChange={(e) => setFarmerProfileForm({ ...farmerProfileForm, contactNumber: e.target.value })}
+                  placeholder="e.g. 9876543210"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="sticky bottom-0 bg-white pt-4 border-t flex justify-end space-x-3 flex-shrink-0 z-10">
+                <button
+                  type="button"
+                  onClick={() => setShowProfileModal(false)}
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-extrabold shadow-md"
+                >
+                  {t('save')}
                 </button>
               </div>
             </form>
